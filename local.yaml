@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+    web:
+        build:
+            context: .
+            dockerfile: compose/local/django/Dockerfile
+        command: /start
+        volumes:
+            - .:/code
+        ports:
+            - '8090:8090'
+        depends_on:
+            - mysql-db
+            - redis
+        links:
+            - mysql-db:mysql-db
+            - redis:redis
+        stdin_open: true
+        tty: true
+        env_file: .env/.local/.django
+
+    mysql-db:
+        build:
+            context: .
+            dockerfile: ./compose/local/mysql/Dockerfile
+        restart: unless-stopped
+        env_file: .env/.local/.django
+        volumes:
+            - mysql_data:/var/lib/mysql
+        ports:
+            - '3306:3306'
+
+    redis:
+        image: 'redis:4.0-alpine'
+        command: 'redis-server --stop-writes-on-bgsave-error no'
+        ports:
+            - '6379:6379'
+
+volumes:
+    mysql_data:
